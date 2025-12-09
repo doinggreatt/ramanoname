@@ -62,8 +62,14 @@
           <tr>
             <th>ID</th>
             <th>Тип</th>
-            <th>Комнат</th>
-            <th>Площадь</th>
+            <th>
+              Комнат
+              <button id="sortRoomsBtn" class="small">↓</button>
+            </th>
+            <th>
+              Площадь
+              <button id="sortAreaBtn" class="small">↓</button>
+            </th>
             <th>Этаж</th>
             <th>Отделка</th>
             <th>Адрес</th>
@@ -78,7 +84,7 @@
   </div>
 
   <script>
-    const API_BASE = 'http://localhost:8008/'; // или http://web:8008/ в docker
+    const API_BASE = 'http://localhost:8008/';
     const tbody = document.getElementById('tbody');
     const refreshBtn = document.getElementById('refreshBtn');
     const filterRooms = document.getElementById('filterRooms');
@@ -95,6 +101,9 @@
     const newImprovement = document.getElementById('newImprovement');
     const newAddress = document.getElementById('newAddress');
     const createBtn = document.getElementById('createBtn');
+
+    let sortField = 'floor_area'; // колонка сортировки по умолчанию
+    let sortDesc = true; // направление сортировки
 
     async function fetchList(params = {}) {
       try {
@@ -121,6 +130,14 @@
         tbody.innerHTML = `<tr><td colspan="8" class="empty">Ничего не найдено</td></tr>`;
         return;
       }
+
+      // сортировка по выбранной колонке
+      list.sort((a, b) => {
+        let aVal = a[sortField] ?? 0;
+        let bVal = b[sortField] ?? 0;
+        return sortDesc ? bVal - aVal : aVal - bVal;
+      });
+
       tbody.innerHTML = list.map(item => {
         return `<tr>
           <td class="center">${escapeHtml(String(item.id ?? ''))}</td>
@@ -164,14 +181,13 @@
           body: JSON.stringify(payload)
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        // очищаем форму
         newType.value = '';
         newRooms.value = '';
         newArea.value = '';
         newFloor.value = '';
         newImprovement.value = '';
         newAddress.value = '';
-        fetchCurrentFilters(); // обновляем таблицу
+        fetchCurrentFilters();
       } catch (err) {
         alert('Ошибка создания: ' + err.message);
       }
@@ -196,6 +212,22 @@
       fetchList();
     });
     createBtn.addEventListener('click', () => createItem());
+
+    // сортировка по площади
+    document.getElementById('sortAreaBtn').addEventListener('click', () => {
+      if (sortField === 'floor_area') sortDesc = !sortDesc;
+      else { sortField = 'floor_area'; sortDesc = true; }
+      document.getElementById('sortAreaBtn').textContent = sortDesc ? '↓' : '↑';
+      fetchCurrentFilters();
+    });
+
+    // сортировка по комнатам
+    document.getElementById('sortRoomsBtn').addEventListener('click', () => {
+      if (sortField === 'num_rooms') sortDesc = !sortDesc;
+      else { sortField = 'num_rooms'; sortDesc = true; }
+      document.getElementById('sortRoomsBtn').textContent = sortDesc ? '↓' : '↑';
+      fetchCurrentFilters();
+    });
 
     function fetchCurrentFilters() {
       const params = {};

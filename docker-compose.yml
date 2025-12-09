@@ -6,8 +6,8 @@ services:
       - "8008:8008"
     command: ["sh", "-c", "uv run backend/app.py"]
     volumes:
-      - .:/backend
-      - /backend/.venv
+      - .:/app
+      - /app/.venv
 
   frontend:
     build:
@@ -18,5 +18,5 @@ services:
       - "5173:5173"
     command: ["sh", "-c", "uv run python -m http.server 5173 --directory frontend"]
     volumes:
-      - .:/backend
-      - /backend/.venv
+      - .:/app
+      - /app/.venv
